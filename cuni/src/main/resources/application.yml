@@ -1,0 +1,61 @@
+
+spring:
+  profiles:
+    active: localhost # 기본적으로 local이 선택된다는 뜻
+  mvc:
+    view:
+      prefix: /WEB-INF/jsp/ 
+      suffix: .jsp
+  datasource:
+    driver-class-name: net.sf.log4jdbc.sql.jdbcapi.DriverSpy
+    url: jdbc:log4jdbc:mysql://${MYSQL_HOST:localhost}:3306/mnu?autoReconnect=true&useUnicode=true&characterEncoding=utf8&serverTimezone=UTC # DB명 치환
+    username: root # DB아이디 치환
+    password: 6490 # DB비번 치환
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 100MB
+      max-request-size: 100MB      
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: GMAIL아이디 # GMAIL아이디 치환
+    password: GMAIL비번 # GMAIL비번 치환
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+mybatis:
+  type-aliases-package: com.example.sbs.cuni.dto # dto의 풀 패키지 명 입력
+custom:
+  logoText: CUNI # 사이트 명 치환
+  uploadDir: C:\Program Files\Apache Software Foundation\Tomcat 9.0\webapps\ROOT\upload # 파일업로드 되는 곳 치환
+  emailSender: no-reply@noreply.com # 사이트 메일 발신자 이름으로 치환
+  emailSenderName: CUNI Master # 사이트 운영자 명으로 치환
+
+---
+
+spring:
+  profiles: localhost
+server:
+  port: 8080 # 포트번호 치환
+
+---
+
+# 운영환경만의 설정
+spring:
+  profiles: production
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://${MYSQL_HOST:localhost}:3306/mnu?autoReconnect=true&useUnicode=true&characterEncoding=utf8&serverTimezone=UTC # DB명 치환(서비스 용)
+    username: root # DB아이디 치환(서비스 용)
+    password: 6490 # DB비번 치환(서비스 용)
+logging:
+  level:
+    root: info
+server:
+  port: 8080 # 포트번호 치환(서비스 용)
+custom:
+  uploadDir: C:\Program Files\Apache Software Foundation\Tomcat 9.0\webapps\ROOT\upload # 파일업로드 되는 곳 치환(서비스용)

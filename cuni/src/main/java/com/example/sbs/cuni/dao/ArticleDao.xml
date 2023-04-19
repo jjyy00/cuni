@@ -1,0 +1,275 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.example.sbs.cuni.dao.ArticleDao">
+	<update id="increaseArticleHit">
+		UPDATE article
+		SET hit = hit + 1
+		WHERE id = #{id}
+	</update>
+	
+	<update id="modifyArticleReply">
+		UPDATE articleReply
+		<set>
+			<if test="body != null">body = #{body},</if>
+		</set>
+		WHERE id = #{id}
+	</update>
+	
+	<update id="modifyArticle">
+		UPDATE article
+		<set>
+			<if test="title != null">title = #{title},</if>
+			<if test="body != null">body = #{body},</if>
+		</set>
+		WHERE id = #{id}
+	</update>
+
+	<insert id="writeArticle" parameterType="map"
+		useGeneratedKeys="true" keyProperty="id">
+		INSERT INTO article
+		SET regDate =
+		NOW(),
+		title = #{title},
+		body = #{body},
+		boardId = #{boardId},
+		memberId =
+		#{memberId}
+	</insert>
+
+	<select id="getArticles" resultType="Article">
+		SELECT *
+		FROM article
+		ORDER BY
+		id
+		DESC
+	</select>
+	
+	<select id="getBoardByBoardCode" resultType="Board">
+		SELECT *
+		FROM board
+		WHERE code = #{boardCode}
+	</select>
+	
+	<select id="getBoard" resultType="Board">
+		SELECT *
+		FROM board
+		WHERE id =
+		#{boardId}
+	</select>
+
+	<select id="getArticlesByBoardCode" resultMap="article">
+		SELECT A.*
+		FROM
+		article AS A
+		INNER JOIN board AS B
+		ON A.boardId = B.id
+		WHERE B.code =
+		#{boardCode}
+		ORDER BY A.id DESC
+	</select>
+
+
+	<select id="getForPrintArticleRepliesFrom"
+		resultMap="articleReply">
+		SELECT AR.*,
+		M.name AS extra__writer
+		FROM articleReply AS AR
+		INNER JOIN `member` AS M
+		ON AR.memberId = M.id
+		WHERE AR.articleId =
+		#{articleId}
+		AND AR.id >= #{from}
+		ORDER BY AR.id
+		DESC
+	</select>
+	
+	<select id="getArticlesCount" resultType="int">
+		SELECT COUNT(*) AS cnt
+		FROM article AS A
+		INNER JOIN board AS B
+		ON A.boardId = B.id
+		WHERE B.code = #{boardCode}
+		<choose>
+			<when test="searchType == 'title'">
+				AND A.title LIKE CONCAT('%',#{searchKeyword},'%')
+			</when>
+			<when test="searchType == 'body'">
+				AND A.body LIKE CONCAT('%',#{searchKeyword},'%')
+			</when>
+			<when test="searchType == 'titleAndBody'">
+				AND (A.title LIKE CONCAT('%',#{searchKeyword},'%') OR
+				A.body LIKE CONCAT('%',#{searchKeyword},'%'))
+			</when>
+		</choose>
+	</select>
+	
+
+	<select id="getForPrintArticles" resultMap="article">
+		SELECT
+		A.*, M.name
+		AS extra__writer,
+		IFNULL(SUM(AL.point), 0) AS
+		extra__likePoint
+		FROM article AS A
+		INNER JOIN board AS B
+		ON A.boardId =
+		B.id
+		INNER JOIN `member` AS M
+		ON A.memberId = M.id
+		LEFT JOIN articleLike
+		AS AL
+		ON A.id = AL.articleId
+		WHERE B.code = #{boardCode}
+		<choose>
+			<when test="searchType == 'title'">
+				AND A.title LIKE CONCAT('%',#{searchKeyword},'%')
+			</when>
+			<when test="searchType == 'body'">
+				AND A.body LIKE CONCAT('%',#{searchKeyword},'%')
+			</when>
+			<when test="searchType == 'titleAndBody'">
+				AND (A.title LIKE CONCAT('%',#{searchKeyword},'%') OR
+				A.body LIKE CONCAT('%',#{searchKeyword},'%'))
+			</when>
+		</choose>
+		GROUP BY A.id
+		ORDER BY A.id DESC
+		<if test="limitCount != null">
+			LIMIT #{limitFrom}, #{limitCount}
+		</if>
+	</select>
+	
+	<insert id="writeArticleReply" parameterType="map"
+		useGeneratedKeys="true" keyProperty="id">
+		INSERT INTO articleReply
+		SET
+		regDate = NOW(),
+		body = #{body},
+		articleId = #{articleId},
+		memberId =
+		#{memberId}
+	</insert>
+	
+	<select id="getArticleReply" resultMap="articleReply">
+		SELECT AR.*
+		FROM
+		articleReply AS AR
+		WHERE AR.id = #{id}
+	</select>
+	
+	<select id="getArticle" resultMap="article">
+		SELECT A.*
+		FROM article AS A
+		WHERE A.id = #{id}
+	</select>
+	
+	<select id="getForPrintArticleReply" resultMap="articleReply">
+		SELECT AR.*,
+		M.name AS extra__writer
+		FROM articleReply AS AR
+		INNER JOIN MEMBER AS M
+		ON AR.memberId = M.id
+		WHERE AR.id = #{id}
+	</select>
+	
+	<select id="getForPrintArticleReplies" resultMap="articleReply">
+		SELECT AR.*,
+		M.name AS extra__writer
+		FROM articleReply AS AR
+		INNER JOIN `member` AS M
+		ON AR.memberId = M.id
+		WHERE AR.articleId = #{articleId}
+		ORDER BY AR.id
+		DESC
+	</select>
+
+	<select id="getForPrintArticle" resultMap="article">
+		SELECT A.*,
+		M.name AS
+		extra__writer,
+		IFNULL(SUM(AL.point), 0) AS extra__likePoint
+		FROM article
+		AS A
+		INNER JOIN MEMBER AS M
+		ON A.memberId = M.id
+		LEFT JOIN articleLike AS
+		AL
+		ON A.id = AL.articleId
+		WHERE A.id = #{id}
+		GROUP BY A.id
+	</select>
+	
+	<select id="getLikePointByMemberId" resultType="int">
+		SELECT
+		IFNULL(SUM(AL.point), 0) AS `point`
+		FROM articleLike AS AL
+		WHERE
+		AL.articleId = #{id}
+		AND AL.memberId = #{memberId}
+	</select>
+
+
+	<select id="getLikePoint" resultType="int">
+		SELECT
+		IFNULL(SUM(AL.point), 0) AS `point`
+		FROM articleLike AS AL
+		WHERE
+		AL.articleId = #{id}
+	</select>
+	
+	<insert id="likeArticle" parameterType="map">
+		INSERT INTO articleLike
+		SET regDate
+		= NOW(),
+		articleId = #{id},
+		memberId = #{memberId},
+		`point` =
+		1
+	</insert>
+	
+	<delete id="cancelLikeArticle">
+		DELETE FROM articleLike
+		WHERE articleId = #{id}
+		AND
+		memberId = #{memberId}
+	</delete>
+	
+	<delete id="deleteArticle">
+		DELETE
+		FROM article
+		WHERE id
+		= #{id}
+	</delete>
+	
+	<delete id="deleteArticleReply">
+		DELETE
+		FROM articleReply
+		WHERE id = #{id}
+	</delete>
+	
+	<resultMap type="Article" id="article">
+		<id property="id" column="id" />
+		<id property="regDate" column="regDate" />
+		<id property="title" column="title" />
+		<id property="body" column="body" />
+		<id property="memberId" column="memberId" />
+		<id property="hit" column="hit" />
+		<id property="boardId" column="boardId" />
+		<association property="extra" javaType="map">
+			<id property="writer" column="extra__writer" />
+			<id property="likePoint" column="extra__likePoint" />
+		</association>
+	</resultMap>
+	
+	<resultMap type="ArticleReply" id="articleReply">
+		<id property="id" column="id" />
+		<id property="regDate" column="regDate" />
+		<id property="body" column="body" />
+		<id property="memberId" column="memberId" />
+		<id property="articleId" column="articleId" />
+		<association property="extra" javaType="map">
+			<id property="writer" column="extra__writer" />
+		</association>
+	</resultMap>
+</mapper> 

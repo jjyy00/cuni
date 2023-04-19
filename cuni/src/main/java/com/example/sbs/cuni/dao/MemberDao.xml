@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.example.sbs.cuni.dao.MemberDao">
+	<insert id="joinMember" parameterType="map"
+		useGeneratedKeys="true" keyProperty="id">
+		INSERT INTO member
+		SET regDate =
+		NOW(),
+		loginId = #{loginId},
+		loginPw = #{loginPw},
+		name = #{name}
+	</insert>
+
+	<select id="getMemberByLoginId" resultType="Member">
+		SELECT *
+		FROM member
+		WHERE loginId = #{loginId}
+	</select>
+	
+	<select id="getMemberById" resultType="Member">
+		SELECT *
+		FROM member
+		WHERE id = #{id}
+	</select>
+</mapper> 
